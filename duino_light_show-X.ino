@@ -1033,6 +1033,27 @@ void analyzeAudioSamples()
   if (++bandCount >= N_FRAMES) bandCount = 0;
 
 }
+#define MAX_BG_BRIGHT 6000
+uint32_t easyBGBright = 0;
+
+void check4background(bool yes)
+{
+
+    if(yes)
+    {
+      easyBGBright++;
+      if(++easyBGBright > MAX_BG_BRIGHT) easyBGBright = MAX_BG_BRIGHT;
+
+      for (uint8_t i = 0; i < N_LEDS; i++)
+#ifdef  PARM_POT_2
+        strip.setPixelColor(i, pgm_read_dword(&BackColors[BackIndex]));
+      strip.setBrightness(BackBrightness * easyBGBright / MAX_BG_BRIGHT);
+#else
+        strip.setPixelColor(i, BACKGROUND);
+#endif
+    }
+    else easyBGBright = 0;  
+}
 
 //*******************************Визуализация**********************************************************
 void doVisualization() 
@@ -1113,16 +1134,7 @@ void doVisualization()
       }
     }
 
-    if (Silence)
-    {
-      for (uint8_t i = 0; i < N_LEDS; i++)
-#ifdef  PARM_POT_2
-        strip.setPixelColor(i, pgm_read_dword(&BackColors[BackIndex]));
-      strip.setBrightness(BackBrightness);
-#else
-		strip.setPixelColor(i, BACKGROUND);
-#endif
-    }
+    check4background(Silence);
     
     return;
   }
@@ -1265,16 +1277,7 @@ void doVisualization()
       }
     }
 
-    if (Silence)
-    {
-      for (uint8_t i = 0; i < N_LEDS; i++)
-#ifdef  PARM_POT_2
-        strip.setPixelColor(i, pgm_read_dword(&BackColors[BackIndex]));
-      strip.setBrightness(BackBrightness);
-#else
-		strip.setPixelColor(i, BACKGROUND);
-#endif
-    }
+    check4background(Silence);
     
     return;
   }
@@ -1410,16 +1413,7 @@ void doVisualization()
       }
     }
 
-    if (Silence)
-    {
-      for (uint8_t i = 0; i < N_LEDS; i++)
-#ifdef  PARM_POT_2
-        strip.setPixelColor(i, pgm_read_dword(&BackColors[BackIndex]));
-      strip.setBrightness(BackBrightness);
-#else
-		strip.setPixelColor(i, BACKGROUND);
-#endif
-    }
+    check4background(Silence);
 
     return;
   }
@@ -1480,16 +1474,7 @@ void doVisualization()
       }
     }
 
-    if (Silence)
-    {
-      for (uint8_t i = 0; i < N_LEDS; i++)
-#ifdef  PARM_POT_2
-        strip.setPixelColor(i, pgm_read_dword(&BackColors[BackIndex]));
-      strip.setBrightness(BackBrightness);
-#else
-		strip.setPixelColor(i, BACKGROUND);
-#endif
-    }
+    check4background(Silence);
     
     return;
   }
