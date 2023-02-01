@@ -77,13 +77,13 @@ typedef struct
 #define btJUMP              (_BV(2))  
 #endif
 
-#define ADC_CHANNEL 0 	//аналоговый вход, для аудио
-#define PARM_POT 	2   // аналоговый вход для потенциометрам PARAM
+#define ADC_CHANNEL 0   //аналоговый вход, для аудио
+#define PARM_POT  2   // аналоговый вход для потенциометрам PARAM
 #ifdef JUMP_BUTTON_PIN
 //*******************************************************************************************************
 // !!!!! Если используете только 1 потенциометр, то закомментируйте #define PARM_POT_2
 //*******************************************************************************************************
-#define PARM_POT_2 	1   // аналоговый вход для потенциометрам PARAM_2
+#define PARM_POT_2  1   // аналоговый вход для потенциометрам PARAM_2
 #endif
 
 //---------------цветовые схемы---------------------
@@ -94,7 +94,7 @@ typedef struct
 //-----------------выбор конфигурации ленты--------------------------------
 #define LEDCONFIG_60 0
 #define LEDCONFIG_120 1
-#define LEDCONFIG_180 2
+#define LEDCONFIG_140 2
 //-------------------------------------------------
 #define MAX_COLOR_BARS 22
 #define MAXCOLORINDEX 256
@@ -155,7 +155,7 @@ uint8_t MAX_AGE = 0;
 uint8_t buttons = 0;
 uint8_t ir_mode = N_MODES;
 
-Adafruit_NeoPixel strip = Adafruit_NeoPixel(NUM_LED, LED_STRIP_PIN, NEO_GRB + NEO_KHZ800);
+Adafruit_NeoPixel strip = Adafruit_NeoPixel(140, LED_STRIP_PIN, NEO_GRB + NEO_KHZ800);
 
 #ifdef JUMP_BUTTON_PIN
 uint8_t lastMusic = 0;
@@ -196,7 +196,7 @@ complex_t     bfly_buff[FFT_N];  // FFT "butterfly" buffer
 uint16_t      spectrum[FFT_N / 2]; // Spectrum output buffer
 #endif
 
-#define MAX_BRIGHTNESS	200
+#define MAX_BRIGHTNESS  200
 volatile uint8_t  smp; //порог срабатывания, уровень шума NoiseThreshold=0,
 volatile uint8_t samplePos = 0;     // Начальнаячя позиция в буфере
 uint8_t maxBrightness = MAX_BRIGHTNESS;       //  яркость максимальная
@@ -319,7 +319,7 @@ void setup()
                             ) //проверяем на первое включение контролера
   {
     ledConfig = EEPROM.read(2); //конфигурация светодиодной ленты
-    if (ledConfig > LEDCONFIG_180) ledConfig = LEDCONFIG_180;
+    if (ledConfig > LEDCONFIG_140) ledConfig = LEDCONFIG_140;
 
     mode = EEPROM.read(3); //последний выбраный режим световой схемы
     if (mode > N_MODES) mode = 0;
@@ -1294,7 +1294,7 @@ void doVisualization()
       case 120:
         nbars = 15;
         break;
-      case 180:
+      case 140:
         nbars = 22;
         break;
     }
@@ -1530,7 +1530,7 @@ void setConfig()
       N_LEDS = 120;
       break;
     case 2:
-      N_LEDS = 180;
+      N_LEDS = 140;
       break;
   }
 }
@@ -1915,7 +1915,7 @@ void configure()
     return;
   }
 
-//Если при включении питания нажата кнопка pattern, то выбираем конфигурацию ленты 60,120 или 180 светодиодов
+//Если при включении питания нажата кнопка pattern, то выбираем конфигурацию ленты 60,120 или 140 светодиодов
   if ((digitalRead(PATTERN_BUTTON_PIN) == LOW) && (digitalRead(COLOR_BUTTON_PIN) == HIGH)) 
   {
     delay(20); // debounce
@@ -1930,7 +1930,7 @@ void configure()
         delay(20); // debounce
       }
       
-      ledConfig = map(analogRead(PARM_POT), 0, 1024, LEDCONFIG_60, LEDCONFIG_180+1); //читаем состояние потенциометра
+      ledConfig = map(analogRead(PARM_POT), 0, 1024, LEDCONFIG_60, LEDCONFIG_140+1); //читаем состояние потенциометра
 
       strip.clear();
       for (uint8_t i = 0; i <= ledConfig; i++) 
