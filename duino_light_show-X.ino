@@ -8,7 +8,12 @@
 #include <ffft.h>
 #include <math.h>
 
+
+#define USE_REMOTE true
+#if USE_REMOTE
+//Maximum supported 2.8.0  lib revision !!!
 #include <IRremote.h>
+#endif
 
 
 typedef struct 
@@ -20,6 +25,7 @@ typedef struct
 } peak_t;
 
 #define DEBUG false  //режим отладки true
+
 #define N_BANDS 8 //число светодиодов для индикации в режиме настройки яркости
 #define N_FRAMES 5
 #define N_PEAKS 25
@@ -30,12 +36,12 @@ typedef struct
 #define PATTERN_DANCE_PARTY             0
 #define PATTERN_SINGLE_DIR_DANCE_PARTY  1
 #define PATTERN_PULSE                   2
-#define PATTERN_LIGHT_BAR               3
-#define PATTERN_COLOR_BARS              4
-#define PATTERN_COLOR_BARS2             5
-#define PATTERN_FLASHBULBS              6
-#define PATTERN_FIREFLIES               7
-#define PATTERN_RANDOM                  8
+#define PATTERN_LIGHT_BAR               33
+#define PATTERN_COLOR_BARS              3
+#define PATTERN_COLOR_BARS2             4
+#define PATTERN_FLASHBULBS              5
+#define PATTERN_FIREFLIES               6
+#define PATTERN_RANDOM                  7
 //------------------------------------------------------------------
 #define PATTERN_MUSIC_LAST      PATTERN_RANDOM           // последний режим цветомузыки
 #define N_MODES_LS              (PATTERN_MUSIC_LAST + 1) // количество режимов цветомузыки
@@ -105,40 +111,60 @@ typedef struct
 
 // Define sensor pin
 const int RECV_PIN = 4;
-#define RECV_TYPE         NEC
-#define RECV_BTTN_UP      0xFF48B7
-#define RECV_BTTN_DOWN    0xFFC837
-#define RECV_BTTN_LEFT    0xFF8877
-#define RECV_BTTN_RIGHT   0xFF08F7
-#define RECV_BTTN_OK      0xFFA857
-#define RECV_BTTN_1       0xFF20DF
-#define RECV_BTTN_2       0xFFA05F
-#define RECV_BTTN_3       0xFF9867
-#define RECV_BTTN_4       0xFFE01F
-#define RECV_BTTN_5       0xFF10EF
-#define RECV_BTTN_6       0xFF708F
-#define RECV_BTTN_7       0xFF50AF
-#define RECV_BTTN_8       0xFF38C7
-#define RECV_BTTN_9       0xFFE817
-#define RECV_BTTN_0       0xFF7887
-#define RECV_BTTN_GOTO    0xFFB847
-#define RECV_BTTN_REP     0xFFF807
-#define RECV_BTTN_SETUP   0xFF32CD
-#define RECV_BTTN_MENU    0xFF0AF5
-#define RECV_BTTN_TITLE   0xFF30CF
 
+// RJ TECH remote
+//#define RECV_TYPE         NEC
+//#define RECV_BTTN_UP      0xFF48B7
+//#define RECV_BTTN_DOWN    0xFFC837
+//#define RECV_BTTN_LEFT    0xFF8877
+//#define RECV_BTTN_RIGHT   0xFF08F7
+//#define RECV_BTTN_OK      0xFFA857
+//#define RECV_BTTN_1       0xFF20DF
+//#define RECV_BTTN_2       0xFFA05F
+//#define RECV_BTTN_3       0xFF9867
+//#define RECV_BTTN_4       0xFFE01F
+//#define RECV_BTTN_5       0xFF10EF
+//#define RECV_BTTN_6       0xFF708F
+//#define RECV_BTTN_7       0xFF50AF
+//#define RECV_BTTN_8       0xFF38C7
+//#define RECV_BTTN_9       0xFFE817
+//#define RECV_BTTN_0       0xFF7887
+//#define RECV_BTTN_GOTO    0xFFB847
+//#define RECV_BTTN_REP     0xFFF807
+//#define RECV_BTTN_SETUP   0xFF32CD
+//#define RECV_BTTN_MENU    0xFF0AF5
+//#define RECV_BTTN_TITLE   0xFF30CF
+
+// APEX remote
+#define RECV_TYPE         NEC
+#define RECV_BTTN_1       0xFF9867
+#define RECV_BTTN_2       0xFFD827
+#define RECV_BTTN_3       0xFF8877
+#define RECV_BTTN_4       0xFFA857
+#define RECV_BTTN_5       0xFFE817 
+#define RECV_BTTN_6       0xFF48B7 
+#define RECV_BTTN_7       0xFF6897 
+#define RECV_BTTN_8       0xFF32CD
+#define RECV_BTTN_9       0xFF02FD
+#define RECV_BTTN_0       0xFF12ED
+#define RECV_BTTN_AB      0xFF28D7
+#define RECV_BTTN_REP     0xFF38C7
+#define RECV_BTTN_SETUP   0xFFC03F
+#define RECV_BTTN_MENU    0xFF807F
+#define RECV_BTTN_TITLE   0xFFB847
 
 //---------------------------------
-#define RECV_BTTN_JUMP   RECV_BTTN_GOTO
+#define RECV_BTTN_JUMP   RECV_BTTN_AB
 #define RECV_BTTN_NEXT   RECV_BTTN_REP
 #define RECV_BTTN_FREQ   RECV_BTTN_SETUP
 #define RECV_BTTN_COLOR  RECV_BTTN_MENU
 #define RECV_BTTN_BKGRND RECV_BTTN_TITLE
 
-
+#if USE_REMOTE
 // Define IR Receiver and Results Objects
 IRrecv irrecv(RECV_PIN);
 decode_results results;
+#endif
  
 #define BACKGROUND ((uint32_t) 0x000006) // фоновая подсветка при тишине
 #define BACKGROUND_COUNT   (31 - 1)
@@ -246,7 +272,7 @@ const uint32_t BackColors[] PROGMEM =
 //*******************************************************************************************************
 void setup() 
 {
-#if DEBUG //для отладки
+#if DEBUG//для отладки
   Serial.begin(115200);
 #endif  
   strip.setBrightness(maxBrightness);
@@ -348,6 +374,9 @@ void setup()
           cutoffFreqBand = 8;         //частотный срез все 8 частот
          // NoiseThreshold = 4;         //уровень срабатывания АЦП
           saveConfig();
+#if DEBUG //для отладки
+          Serial.println("Config RESET!!!");
+#endif            
          }
 #ifdef  PARM_POT_2
   BackIndex = EEPROM.read(BACK_COLOR_EEPROM_ADR);
@@ -381,9 +410,10 @@ void setup()
 #if DEBUG //для отладки
   Serial.println("Timer");
 #endif 
+#if USE_REMOTE
     // Enable the IR Receiver
   irrecv.enableIRIn();
-
+#endif
 #if DEBUG //для отладки
   Serial.println(getMemory());
 #endif  
@@ -426,9 +456,12 @@ uint8_t get_buttons(void)
 
     if(!new_set)
     {
-
+#if USE_REMOTE      
         if (irrecv.decode(&results))
         {
+#if DEBUG
+            Serial.println(results.value, HEX);
+#endif          
             if(results.decode_type == RECV_TYPE)
             {
                 switch (results.value) 
@@ -469,27 +502,27 @@ uint8_t get_buttons(void)
                       new_set = btPATTERN;
                       ir_mode = PATTERN_PULSE;
                       break;                      
+                    // case RECV_BTTN_4:
+                    //   new_set = btPATTERN;
+                    //   ir_mode = PATTERN_LIGHT_BAR;
+                    //   break;                      
                     case RECV_BTTN_4:
-                      new_set = btPATTERN;
-                      ir_mode = PATTERN_LIGHT_BAR;
-                      break;                      
-                    case RECV_BTTN_5:
                       new_set = btPATTERN;
                       ir_mode = PATTERN_COLOR_BARS;
                       break;                      
-                    case RECV_BTTN_6:
+                    case RECV_BTTN_5:
                       new_set = btPATTERN;
                       ir_mode = PATTERN_COLOR_BARS2;
                       break;                      
-                    case RECV_BTTN_7:
+                    case RECV_BTTN_6:
                       new_set = btPATTERN;
                       ir_mode = PATTERN_FLASHBULBS;
                       break;                      
-                    case RECV_BTTN_8:
+                    case RECV_BTTN_7:
                       new_set = btPATTERN;
                       ir_mode = PATTERN_FIREFLIES;
                       break;                      
-                    case RECV_BTTN_9:
+                    case RECV_BTTN_8:
                       new_set = btPATTERN;
                       ir_mode = PATTERN_RANDOM;
                       break;                     
@@ -498,7 +531,7 @@ uint8_t get_buttons(void)
             }
             irrecv.resume();
         }
-
+#endif
     }
 
     return new_set;  
@@ -516,7 +549,10 @@ void background()
 #else
         strip.setPixelColor(i, BACKGROUND);
 #endif      
-      if(irrecv.isIdle()) strip.show(); 
+#if USE_REMOTE        
+      if(irrecv.isIdle()) 
+#endif
+      { strip.show(); }
       button_pattern();
       if (pattern != PATTERN_BACKGROUND) return;
     }
@@ -524,7 +560,9 @@ void background()
 //************************************Главный цикл программы*******************************************
 void loop() 
 {
-  if(irrecv.isIdle())
+#if USE_REMOTE        
+  if(irrecv.isIdle()) 
+#endif
   {
   //Пока прерывание АЦП включено, ждем завершения    
   // Обработчик прерывания собирает аудио семплы в буфер захвата.
@@ -535,6 +573,7 @@ void loop()
   fft_input(capture, bfly_buff);// Выполнить алгоритм FFT для преобразования выборок в сложные числа.
 #endif  
   }
+
   // Чтобы получить показания потенциометра, переводим АЦП в стандартный режим
   setADCDefault();    //переводим АЦП в стандартный режим
 
@@ -584,10 +623,12 @@ void loop()
     }
   }
 
-  if(irrecv.isIdle())
+#if USE_REMOTE        
+  if(irrecv.isIdle()) 
+#endif
   {
     setADCFreeRunning();             // снова настраиваем АЦП на работу по прерыванию
-#if ! DEBUG  
+#if ! DEBUG
     // The rest of the FFT computation:
     fft_execute(bfly_buff);          // Process complex data
     fft_output(bfly_buff, spectrum); // Complex -> spectrum
@@ -653,23 +694,26 @@ void loop()
         }
       }
     }
-  
-    if (pattern != PATTERN_LIGHT_BAR) 
-    {
+
+    // if (pattern != PATTERN_LIGHT_BAR) 
+    // {
       strip.clear();   // выключаем все светодиоды в ленте
-    }
+    // }
   
     strip.setBrightness(maxBrightness);
   
     doVisualization(); // визуализация
+
   }
 }
 
 //************************проверяем нажатие кнопки PATTERN**************************
 void button_pattern()
 {
-  if(irrecv.isIdle())
-    button_pattern(true);
+#if USE_REMOTE        
+      if(irrecv.isIdle()) 
+#endif
+      { button_pattern(true); }
 }
 void button_pattern(bool flag)
 {
@@ -754,6 +798,7 @@ void setMode(bool flag)
         {
           randomized = false;
         }
+
   strip.clear(); //обнулить всю ленту
   if (!randomized) 
   {
@@ -766,17 +811,14 @@ void setMode(bool flag)
           strip.setPixelColor(mode, 0, 0, 128); //синий это режимы световых эффектов(бещие огни)
           TIMSK0 = 1; 
       }  
-  
   }
   else 
   {
       strip.setPixelColor(mode, 128, 0, 0); // красный для выбора режима случайной световой схемы
   }
   strip.show(); //применить схему
-
   //while ((digitalRead(PATTERN_BUTTON_PIN) == LOW) && (digitalRead(COLOR_BUTTON_PIN) == HIGH)); //ждем отпускания кнопки PATTERN
   msdelay(BTTN_DELAY);
-
   
   saveConfig();  //сохранить изменения в EEPROM
   
@@ -785,7 +827,6 @@ void setMode(bool flag)
   while(mode >= N_MODES_LS)
   {
     setParameters(); //устанавливаем параметры для выбранного режима
-
 #if DEBUG //для отладки
   Serial.println(pattern);
 #endif
@@ -793,8 +834,6 @@ void setMode(bool flag)
 
   reset();
   strip.clear(); //погасить всю ленту
-
-
 }
 //*******************************// Выбор режима световой схемы*********************************************
 void setParameters() 
@@ -811,9 +850,9 @@ void setParameters()
     case PATTERN_SINGLE_DIR_DANCE_PARTY:
       MAX_AGE = N_LEDS + N_LEDS / 4;
       break;
-    case PATTERN_LIGHT_BAR:
-      MAX_AGE = 60;
-      break;
+    // case PATTERN_LIGHT_BAR:
+    //   MAX_AGE = 60;
+    //   break;
     case PATTERN_COLOR_BARS:
     case PATTERN_FLASHBULBS:
       MAX_AGE = 30;
@@ -913,7 +952,7 @@ ISR(ADC_vect) //прерывание АЦП. по окончании оцифр�
   // нолем считается 512, все что больше 512 положительные и все что меньше 512 это отрицательные значения
   // все что меньше порогового уровня шума будет обнулятся
   if(sample>(512+smp)) sample-=smp; else if(sample<(512-smp))sample+=smp; //уменьшить уровень звука
-#if ! DEBUG  
+#if ! DEBUG
   capture[samplePos] = ((sample > (511 - smp)) && (sample < (511 + smp))) ? 0 : sample - 512;
 #endif
   if (++samplePos >= FFT_N) ADCSRA &= ~_BV(ADIE); //буфер заполнен семплами, поэтому отключаем прерывания от АЦП
@@ -1041,6 +1080,9 @@ void check4background(bool yes)
 
     if(yes)
     {
+// #if DEBUG
+//       Serial.println("***Bakgroung!");  
+// #endif          
       easyBGBright++;
       if(++easyBGBright > MAX_BG_BRIGHT) easyBGBright = MAX_BG_BRIGHT;
 
@@ -1206,81 +1248,81 @@ void doVisualization()
   }
 
   // Entire strip is same color displaying most recent peak color.
-  if (pattern == PATTERN_LIGHT_BAR) 
-  {
+  // if (pattern == PATTERN_LIGHT_BAR) 
+  // {
 
-    uint32_t color;
-    float ageScale;
-    if (peaks[peakIndex].magnitude > 0) 
-    {
-      Silence = false;
+  //   uint32_t color;
+  //   float ageScale;
+  //   if (peaks[peakIndex].magnitude > 0) 
+  //   {
+  //     Silence = false;
       
-      if (peaks[peakIndex].age == 0) 
-      {
-        byte baseColor = peaks[peakIndex].baseColor;
-        // Since the light bar is so bright, scale down the max brightness
-        // for this mode to avoid blindness.
-        byte tmp = maxBrightness;
-        float tmpF = brightnessScale;
-        maxBrightness = maxBrightness >> 2; // divide by 4
-        brightnessScale = maxBrightness / 255.0;
-        for (uint8_t i = 0; i < N_LEDS; i++) {
-          color = getColor(baseColor, random(255));
-          strip.setPixelColor(i, color);
-        }
-        // restore brightness settings
-        maxBrightness = tmp;
-        brightnessScale = tmpF;
-      } else {
-        // Adjust brightness for age
-        ageScale = (float)(1.0 - ((float)peaks[peakIndex].age / (float)MAX_AGE));
-        uint32_t tmpColor ;
-        if ((peaks[peakIndex].rnd % 2) == 0) 
-        {
-          // shift to right
-          tmpColor = strip.getPixelColor(N_LEDS - 1);
-          for (int p = (N_LEDS - 1); p >= 0; p--) 
-          {
-            if (p == 0) 
-            {
-              color = tmpColor;
-            } else {
-              color = strip.getPixelColor(p - 1);
-            }
-            color = adjustBrightness(color, ageScale);
-            strip.setPixelColor(p, color);
-          }
-        } else {
-                // shift to left
-                 tmpColor = strip.getPixelColor(0);
-                  for (int p = 0; p < N_LEDS; p++) 
-                  {
-                    if (p == (N_LEDS - 1)) 
-                    {
-                      color = tmpColor;
-                     } else {
-                              color = strip.getPixelColor(p + 1);
-                            }
-            color = adjustBrightness(color, ageScale);
-            strip.setPixelColor(p, color);
-          }
-        }
+  //     if (peaks[peakIndex].age == 0) 
+  //     {
+  //       byte baseColor = peaks[peakIndex].baseColor;
+  //       // Since the light bar is so bright, scale down the max brightness
+  //       // for this mode to avoid blindness.
+  //       byte tmp = maxBrightness;
+  //       float tmpF = brightnessScale;
+  //       maxBrightness = maxBrightness >> 2; // divide by 4
+  //       brightnessScale = maxBrightness / 255.0;
+  //       for (uint8_t i = 0; i < N_LEDS; i++) {
+  //         color = getColor(baseColor, random(255));
+  //         strip.setPixelColor(i, color);
+  //       }
+  //       // restore brightness settings
+  //       maxBrightness = tmp;
+  //       brightnessScale = tmpF;
+  //     } else {
+  //       // Adjust brightness for age
+  //       ageScale = (float)(1.0 - ((float)peaks[peakIndex].age / (float)MAX_AGE));
+  //       uint32_t tmpColor ;
+  //       if ((peaks[peakIndex].rnd % 2) == 0) 
+  //       {
+  //         // shift to right
+  //         tmpColor = strip.getPixelColor(N_LEDS - 1);
+  //         for (int p = (N_LEDS - 1); p >= 0; p--) 
+  //         {
+  //           if (p == 0) 
+  //           {
+  //             color = tmpColor;
+  //           } else {
+  //             color = strip.getPixelColor(p - 1);
+  //           }
+  //           color = adjustBrightness(color, ageScale);
+  //           strip.setPixelColor(p, color);
+  //         }
+  //       } else {
+  //               // shift to left
+  //                tmpColor = strip.getPixelColor(0);
+  //                 for (int p = 0; p < N_LEDS; p++) 
+  //                 {
+  //                   if (p == (N_LEDS - 1)) 
+  //                   {
+  //                     color = tmpColor;
+  //                    } else {
+  //                             color = strip.getPixelColor(p + 1);
+  //                           }
+  //           color = adjustBrightness(color, ageScale);
+  //           strip.setPixelColor(p, color);
+  //         }
+  //       }
 
-      }
+  //     }
 
-      // age peak
-      peaks[peakIndex].age++;
+  //     // age peak
+  //     peaks[peakIndex].age++;
 
-      if (peaks[peakIndex].age > MAX_AGE) 
-      {
-        peaks[peakIndex].magnitude = 0;
-      }
-    }
+  //     if (peaks[peakIndex].age > MAX_AGE) 
+  //     {
+  //       peaks[peakIndex].magnitude = 0;
+  //     }
+  //   }
 
-    check4background(Silence);
+  //   check4background(Silence);
     
-    return;
-  }
+  //   return;
+  // }
 
   // Visual peaks are assigned one of 15 color bars.
   if ((pattern == PATTERN_COLOR_BARS) || (pattern == PATTERN_COLOR_BARS2)) 
@@ -1544,7 +1586,9 @@ uint8_t determineWaitTime()
   if (pattern == PATTERN_LIGHT_BAR) 
   {
     youngest = peaks[peakIndex].age;
-  } else {
+  } 
+  else
+  {
     for (uint8_t i = 0; i < N_PEAKS; i++) 
     {
       if (peaks[i].magnitude > 0) 
@@ -1818,7 +1862,11 @@ void setCutoffFreqBand() // настройки частот среза, поте
     {
       strip.setPixelColor(i, getColor(i * 32, 0)); // выбрать комбинация светодиодов на ленте
     }
-    if(irrecv.isIdle()) strip.show();                   //включить все выбраные в функции setPixelColor светодиоды в ленте
+      //включить все выбраные в функции setPixelColor светодиоды в ленте
+#if USE_REMOTE        
+      if(irrecv.isIdle()) 
+#endif
+      { strip.show(); }
     
     uint16_t reading2 = map(analogRead(PARM_POT), 0, 1024, 0, 8);//прочитать новое положение потенциометра (PARAM), всего 8 значений
     if (reading2 != reading1)  //сравнить значения потенциометра PARAM
@@ -1854,7 +1902,10 @@ void setBackgroundColor()
       for (uint16_t i = 0; i < N_LEDS; i++)
         strip.setPixelColor(i, pgm_read_dword(&BackColors[BackIndex]));
       strip.setBrightness(ReadResult);
-      if(irrecv.isIdle()) strip.show();
+#if USE_REMOTE        
+      if(irrecv.isIdle()) 
+#endif
+      { strip.show(); }
     }
 
     BackBrightness = ReadResult;
@@ -1867,7 +1918,10 @@ void setBackgroundColor()
       ReadResult = map(analogRead(PARM_POT_2), 0, 1024, 0, BACKGROUND_COUNT);
       for (uint16_t i = 0; i < N_LEDS; i++)
         strip.setPixelColor(i, pgm_read_dword(&BackColors[ReadResult]));
-      if(irrecv.isIdle()) strip.show();
+#if USE_REMOTE        
+      if(irrecv.isIdle()) 
+#endif
+      { strip.show(); }
     }
 
     BackIndex = ReadResult;
